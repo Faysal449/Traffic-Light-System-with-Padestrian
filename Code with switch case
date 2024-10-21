@@ -1,0 +1,96 @@
+const int buttonPin = 1;    
+const int redPin = 7;         
+const int greenPin = 4;      
+const int carGreenLed = 9;    
+const int carYellowLed = 12;   
+const int carRedLed = 13;      
+
+
+enum State {
+  CARS_GREEN,
+  CARS_YELLOW,
+  CARS_RED_PEDESTRIAN_GREEN,
+  CARS_RED_PEDESTRIAN_RED
+};
+
+State currentState = CARS_GREEN; 
+
+
+unsigned long previousMillis = 0; 
+const long greenDuration = 5000;  
+const long yellowDuration = 2000; 
+const long pedestrianGreenDuration = 5000; 
+
+bool pedestrianWaiting = false;
+
+void setup() {
+  
+  pinMode(buttonPin, INPUT_PULLUP); 
+  pinMode(redPin, OUTPUT);          
+  pinMode(greenPin, OUTPUT);        
+  pinMode(carGreenLed, OUTPUT);
+  pinMode(carYellowLed, OUTPUT);
+  pinMode(carRedLed, OUTPUT);
+
+ 
+  digitalWrite(carGreenLed, HIGH);
+  digitalWrite(carYellowLed, LOW);
+  digitalWrite(carRedLed, LOW);
+  digitalWrite(redPin, HIGH);  
+  digitalWrite(greenPin, LOW); 
+}
+
+void loop() {
+  unsigned long currentMillis = millis(); 
+
+  
+  if (digitalRead(buttonPin) == LOW) {
+    pedestrianWaiting = true;
+  }
+
+  
+  switch (currentState) {
+    case CARS_GREEN:
+      if (pedestrianWaiting && currentMillis - previousMillis >= greenDuration) {
+       
+        currentState = CARS_YELLOW;
+        digitalWrite(carGreenLed, LOW);
+        digitalWrite(carYellowLed, HIGH);
+        previousMillis = currentMillis;
+      }
+      break;
+
+    case CARS_YELLOW:
+      if (currentMillis - previousMillis >= yellowDuration) {
+       
+        currentState = CARS_RED_PEDESTRIAN_GREEN;
+        digitalWrite(carYellowLed, LOW);
+        digitalWrite(carRedLed, HIGH);
+        digitalWrite(redPin, LOW);   
+        digitalWrite(greenPin, HIGH); 
+        previousMillis = currentMillis;
+      }
+      break;
+
+    case CARS_RED_PEDESTRIAN_GREEN:
+      if (currentMillis - previousMillis >= pedestrianGreenDuration) {
+        
+        currentState = CARS_RED_PEDESTRIAN_RED;
+        digitalWrite(greenPin, LOW);  
+        digitalWrite(redPin, HIGH);  
+        previousMillis = currentMillis;
+      }
+      break;
+
+    case CARS_RED_PEDESTRIAN_RED:
+      if (currentMillis - previousMillis >= yellowDuration) {
+
+        currentState = CARS_GREEN;
+        digitalWrite(carRedLed, LOW);
+        digitalWrite(carGreenLed, HIGH);
+        pedestrianWaiting = false; 
+        previousMillis = currentMillis;
+      }
+      break;
+  }
+}
